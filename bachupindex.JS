@@ -1,4 +1,93 @@
-<html>
+const express = require('express');
+const session = require('express-session');
+const { Chart } = require('chart.js');
+const fs = require('fs');
+const app = express();
+const port = 8080;
+
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(__dirname));
+
+// Configuração da sessão
+app.use(session({
+    secret: 'suaChaveSecreta',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Função para gerar dados de consumo simulados
+function gerarDadosSimulados(dia) {
+    const consumoDiario = [30, 31, 32, 31, 30, 25, 20, 18, 20, 17, 24, 35, 40, 35, 30, 28, 35, 30, 35, 30, 25, 28, 30, 32];
+    const consumoSemanal = [70, 78, 83, 72, 60, 110, 120];
+
+    return {
+        totalKwh: consumoDiario.reduce((acc, value) => acc + value, 0),
+        totalReais: 0.7 * consumoDiario.reduce((acc, value) => acc + value, 0),
+        consumoDiario,
+        consumoSemanal
+    };
+}
+
+// Função para gerar gráficos
+function gerarGraficos(dadosDiario, dadosSemanal) {
+    const labelsDiario = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    const labelsSemanal = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+    const dadosGraficoDiario = {
+        labels: labelsDiario,
+        datasets: [{
+            label: 'Consumo Diário (kWh)',
+            data: dadosDiario,
+            fill: false,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2
+        }]
+    };
+
+    const dadosGraficoSemanal = {
+        labels: labelsSemanal,
+        datasets: [{
+            label: 'Consumo Semanal (kWh)',
+            data: dadosSemanal,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2
+        }]
+    };
+
+    return { dadosGraficoDiario, dadosGraficoSemanal };
+}
+
+// Rota principal - exibe o formulário de login
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/login.html');
+});
+
+// Rota para processar o formulário de login
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    // Exemplo simples: se o nome de usuário é "admin" e a senha é "password"
+    if (username === 'admin' && password === 'password') {
+        // Defina a variável de sessão para indicar que o usuário está autenticado
+        req.session.authenticated = true;
+
+        // Redirecione para a página de dashboard
+        res.redirect('/dashboard');
+    } else {
+        res.send('Login falhou. Verifique suas credenciais.');
+    }
+});
+
+// Rota para a página de dashboard
+app.get('/dashboard', (req, res) => {
+    if (req.session.authenticated) {
+        const dadosSimulados = gerarDadosSimulados(new Date().getDay());
+        const { dadosGraficoDiario, dadosGraficoSemanal } = gerarGraficos(dadosSimulados.consumoDiario, dadosSimulados.consumoSemanal);
+
+        // Renderizar a página com os dados
+        res.send(`
+        <html>
 
 <head>
     <title>Dashboard</title>
@@ -171,15 +260,15 @@
         <div class="dashboard-box">
             <div class="chart-container">
                 <p>ATÉ AGORA</p>
-                <P>R$ ${dadosSimulados.totalReais.toFixed(2)}</p>
+                <P>R$ 89.67</p>
                 <hr>
-                <P>${dadosSimulados.totalKwh} kWh</P>
+                <P>57.8 kWh</P>
             </div>
             <div class="chart-container">
                 <p class="p-meta">META DO MÊS</p>
-                <P class="p-meta">R$ ${dadosSimulados.totalReais.toFixed(2)}</p>
+                <P class="p-meta">R$ </p>
                 <hr>
-                <P class="p-meta">${dadosSimulados.totalKwh} kWh</P>
+                <P class="p-meta"> kWh</P>
             </div>
         </div>
     </div>
@@ -198,8 +287,8 @@
                                 <rect width="100%" height="100%" x="0" y="0"></rect>
                             </clipPath>
                         </defs>
-                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="0"></rect>
-                        <text class="percentage" x="50" y="50">50%</text>
+                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="83.5"></rect>
+                        <text class="percentage" x="50" y="50">16.5%</text>
                     </svg>
                 </div>
                 <div class="chart">
@@ -209,8 +298,8 @@
                                 <rect width="100%" height="100%" x="0" y="0"></rect>
                             </clipPath>
                         </defs>
-                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="42"></rect>
-                        <text class="percentage" x="50" y="50">58%</text>
+                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="68"></rect>
+                        <text class="percentage" x="50" y="50">32%</text>
                     </svg>
                 </div>
             </div>
@@ -260,27 +349,6 @@
     </div>
 
 
-    <script>
-        function updateChart(value) {
-            var circle = document.querySelector('.circle');
-            var percentageText = document.querySelector('.percentage');
-            var angle = (value / 100) * 180; // Ângulo da metade do círculo
-
-            // Atualiza a posição da clip-path para ajustar a porcentagem
-            circle.style.clipPath = 'url(#circleClip)';
-            circle.style.clipPath = 'inset(' + (100 - value) + '% 0% 0% 0%)';
-
-            // Atualiza o texto da porcentagem
-            percentageText.textContent = value + '%';
-        }
-
-        updateChart(35);
-
-    </script>
-
-
-
-
     <div class="dashboard-title">
         <div class="chart-container">
             <div class="chart-box-graph">
@@ -315,3 +383,12 @@
 </body>
 
 </html>
+        `);
+    } else {
+        res.redirect('/');
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});

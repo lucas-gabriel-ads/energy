@@ -26,7 +26,7 @@
             font-weight: bold;
         }
 
-        .p-meta-red{
+        .p-meta-red {
             color: red;
             text-align: center;
             font-weight: bold;
@@ -68,6 +68,14 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .dashboard-title-graf {
+            background-color: #161d2f;
+            padding: 5px;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
         .dashboard-title-circles {
             background-color: #161d2f;
             padding: 5px;
@@ -100,7 +108,6 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 1);
-            width: 50%;
         }
 
         canvas {
@@ -159,7 +166,17 @@
         }
 
         th {
-            background-color:  rgb(13, 67, 129);
+            background-color: rgb(13, 67, 129);
+        }
+
+        .bot {
+            background-color: #161d2f;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 220px;
         }
     </style>
 </head>
@@ -171,18 +188,48 @@
         <div class="dashboard-box">
             <div class="chart-container">
                 <p>ATÉ AGORA</p>
-                <P>R$ ${dadosSimulados.totalReais.toFixed(2)}</p>
+                <P>R$ 40.46</p>
                 <hr>
-                <P>${dadosSimulados.totalKwh} kWh</P>
+                <P>57.8 kWh</P>
             </div>
             <div class="chart-container">
                 <p class="p-meta">META DO MÊS</p>
-                <P class="p-meta">R$ ${dadosSimulados.totalReais.toFixed(2)}</p>
+                <P class="p-meta" id="metaValue">R$ 0,00</p>
                 <hr>
-                <P class="p-meta">${dadosSimulados.totalKwh} kWh</P>
+                <P class="p-meta" id="metaKHW">0 KWh</P>
+                <button onclick="abrirPopup()" class="bot">Alterar Meta</button>
             </div>
         </div>
     </div>
+
+    <script>
+        function abrirPopup() {
+            var novaMeta = prompt("Digite a nova meta em R$:");
+
+            // Verificar se o usuário pressionou Cancelar ou deixou em branco
+            if (novaMeta === null || novaMeta.trim() === "") {
+                alert("Digite um valor válido para a nova meta.");
+            } else {
+                var novoKhw = novaMeta / 0.7
+
+                // Atualizar o valor da meta na página
+                document.getElementById("metaValue").innerText = `R$ ${novaMeta}`;
+                document.getElementById("metaKHW").innerText = `${novoKhw.toFixed(1)} KWh`;
+                atualizaGraph(novaMeta);
+            }
+        }
+
+        function atualizaGraph(valor) {
+            var grafico = document.getElementById("graph");
+            var novoY =  (100-(4046 / valor)).toFixed(1);
+            var txtGraf = document.getElementById("pGraf");
+            var txtvalor = (100 - novoY).toFixed(1)
+
+            // Alterar o parâmetro y
+            grafico.setAttribute("y", novoY);
+            txtGraf.textContent = `${txtvalor}%`;
+        }
+    </script>
 
 
     <div class="dashboard-title-circles">
@@ -198,8 +245,8 @@
                                 <rect width="100%" height="100%" x="0" y="0"></rect>
                             </clipPath>
                         </defs>
-                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="0"></rect>
-                        <text class="percentage" x="50" y="50">50%</text>
+                        <rect id="graph" class="circle half-circle" width="100%" height="100%" x="0" y="100"></rect>
+                        <text id="pGraf" class="percentage" x="50" y="50">0%</text>
                     </svg>
                 </div>
                 <div class="chart">
@@ -209,8 +256,8 @@
                                 <rect width="100%" height="100%" x="0" y="0"></rect>
                             </clipPath>
                         </defs>
-                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="42"></rect>
-                        <text class="percentage" x="50" y="50">58%</text>
+                        <rect class="circle half-circle" width="100%" height="100%" x="0" y="68"></rect>
+                        <text class="percentage" x="50" y="50">32%</text>
                     </svg>
                 </div>
             </div>
@@ -231,25 +278,33 @@
                         <td>Julho</td>
                         <td>400 KWh</td>
                         <td>453 KWh</td>
-                        <td><p class="p-meta">11.69%</p></td>
+                        <td>
+                            <p class="p-meta">11.69%</p>
+                        </td>
                     </tr>
                     <tr>
                         <td>Agosto</td>
                         <td>350 kWh</td>
                         <td>300 KWh</td>
-                        <td><p class="p-meta-red">-16.66%</p></td>
+                        <td>
+                            <p class="p-meta-red">-16.66%</p>
+                        </td>
                     </tr>
                     <tr>
                         <td>Setembro</td>
                         <td>474 KWh</td>
                         <td>350 KWh</td>
-                        <td><p class="p-meta-red">-35.42%</p></td>
+                        <td>
+                            <p class="p-meta-red">-35.42%</p>
+                        </td>
                     </tr>
                     <tr>
                         <td>Outubro</td>
                         <td>350 KWh</td>
                         <td>450 KWh</td>
-                        <td><p class="p-meta">22.22%</p></td>
+                        <td>
+                            <p class="p-meta">22.22%</p>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -260,28 +315,7 @@
     </div>
 
 
-    <script>
-        function updateChart(value) {
-            var circle = document.querySelector('.circle');
-            var percentageText = document.querySelector('.percentage');
-            var angle = (value / 100) * 180; // Ângulo da metade do círculo
-
-            // Atualiza a posição da clip-path para ajustar a porcentagem
-            circle.style.clipPath = 'url(#circleClip)';
-            circle.style.clipPath = 'inset(' + (100 - value) + '% 0% 0% 0%)';
-
-            // Atualiza o texto da porcentagem
-            percentageText.textContent = value + '%';
-        }
-
-        updateChart(35);
-
-    </script>
-
-
-
-
-    <div class="dashboard-title">
+    <div class="dashboard-title-graf">
         <div class="chart-container">
             <div class="chart-box-graph">
                 <h3>Consumo Diário</h3>
@@ -297,19 +331,65 @@
     </div>
 
     <script>
+        // Função para gerar dados de consumo simulados
+        function gerarDadosSimulados(dia) {
+            const consumoDiario = [30, 31, 32, 31, 30, 25, 20, 18, 20, 17, 24, 35, 40, 35, 30, 28, 35, 30, 35, 30, 25, 28, 30, 32];
+            const consumoSemanal = [70, 78, 83, 72, 60, 110, 120];
+
+            return {
+                totalKwh: consumoDiario.reduce((acc, value) => acc + value, 0),
+                totalReais: 0.7 * consumoDiario.reduce((acc, value) => acc + value, 0),
+                consumoDiario,
+                consumoSemanal
+            };
+        }
+
+        // Função para gerar gráficos
+        function gerarGraficos(dadosDiario, dadosSemanal) {
+            const labelsDiario = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+            const labelsSemanal = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+            const dadosGraficoDiario = {
+                labels: labelsDiario,
+                datasets: [{
+                    label: 'Consumo Diário (kWh)',
+                    data: dadosDiario,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2
+                }]
+            };
+
+            const dadosGraficoSemanal = {
+                labels: labelsSemanal,
+                datasets: [{
+                    label: 'Consumo Semanal (kWh)',
+                    data: dadosSemanal,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                }]
+            };
+
+            return { dadosGraficoDiario, dadosGraficoSemanal };
+        }
+
+        const dadosSimulados = gerarDadosSimulados(new Date().getDay());
+        const { dadosGraficoDiario, dadosGraficoSemanal } = gerarGraficos(dadosSimulados.consumoDiario, dadosSimulados.consumoSemanal);
+
         // Configurar gráfico diário
         var ctxDiario = document.getElementById('chartDiario').getContext('2d');
         new Chart(ctxDiario, {
             type: 'line',
-            data: ${ JSON.stringify(dadosGraficoDiario) }
-                        });
+            data: dadosGraficoDiario
+        });
 
         // Configurar gráfico semanal
         var ctxSemanal = document.getElementById('chartSemanal').getContext('2d');
         new Chart(ctxSemanal, {
             type: 'bar',
-            data: ${ JSON.stringify(dadosGraficoSemanal) }
-                        });
+            data: dadosGraficoSemanal
+        });
     </script>
 
 </body>
